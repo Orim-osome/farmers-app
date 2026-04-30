@@ -1,0 +1,99 @@
+/* src/styles/Navbar.css */
+
+.navbar {
+  background: #166534;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  width: 46px;
+  height: 46px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.logo-text h1 {
+  color: white;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.logo-text p {
+  color: #a1e0b8;
+  font-size: 0.85rem;
+  margin: 0;
+  margin-top: -2px;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  text-align: right;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .user-info {
+    display: block;
+  }
+}
+
+.user-name {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+.user-role {
+  color: #a1e0b8;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  color: #166534;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+}
