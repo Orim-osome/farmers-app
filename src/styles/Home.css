@@ -1,9 +1,17 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html {
   scrollbar-gutter: stable;
 }
 
 .home-container {
   font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .home-navbar {
@@ -17,47 +25,56 @@ html {
 .navbar-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 18px 24px;
+  padding: 12px 16px; /* Slightly reduced padding for mobile fit */
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: white;
+  min-width: 0; /* Allows text to shrink if needed */
 }
 
 .logo-icon {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
 }
 
 .logo h1 {
-  font-size: 1.8rem;
+  font-size: clamp(1rem, 4vw, 1.8rem);
   font-weight: 700;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logo p {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   opacity: 0.85;
   margin: 0;
 }
 
 .nav-links {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .nav-btn {
-  padding: 10px 24px;
+  padding: 8px 16px; /* Optimized padding for mobile */
   border-radius: 50px;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .login-btn {
@@ -77,14 +94,13 @@ html {
   color: #166534;
 }
 
-/* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #052e16 0%, #166534 100%);
   color: white;
-  padding: 120px 24px 100px;
+  padding: 60px 24px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 60px;
+  gap: 40px;
   align-items: center;
   max-width: 1280px;
   margin: 0 auto;
@@ -98,7 +114,7 @@ html {
 }
 
 .hero-content h1 {
-  font-size: 3.2rem;
+  font-size: clamp(2rem, 8vw, 3.2rem); /* Dynamic sizing to prevent overflow */
   line-height: 1.1;
   font-weight: 700;
   margin-bottom: 24px;
@@ -109,7 +125,7 @@ html {
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   opacity: 0.9;
   max-width: 520px;
   margin-bottom: 40px;
@@ -117,20 +133,28 @@ html {
 
 .hero-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .cta-button {
-  padding: 16px 32px;
+  padding: 14px 28px;
   border-radius: 50px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  width: 100%; /* Stacks nicely on mobile */
+}
+
+@media (min-width: 480px) {
+  .cta-button {
+    width: auto;
+  }
 }
 
 .primary {
@@ -154,15 +178,16 @@ html {
   background: rgba(255,255,255,0.1);
 }
 
+/* Feature and CTA styles remain consistent with your logic */
 .features-section {
-  padding: 100px 24px;
+  padding: 80px 24px;
   background: #f8fafc;
   text-align: center;
 }
 
 .section-title {
-  font-size: 2.5rem;
-  margin-bottom: 60px;
+  font-size: 2rem;
+  margin-bottom: 40px;
   color: #052e16;
 }
 
@@ -182,52 +207,27 @@ html {
 
 .feature-card {
   background: white;
-  padding: 40px 30px;
+  padding: 30px;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease;
 }
 
-.feature-card:hover {
-  transform: translateY(-10px);
-}
-
-.feature-icon {
-  width: 70px;
-  height: 70px;
-  background: #ecfdf5;
-  color: #10b981;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24px;
-  font-size: 2rem;
-}
-
-/* CTA */
 .cta-section {
   background: #166534;
   color: white;
-  padding: 100px 24px;
+  padding: 80px 24px;
   text-align: center;
 }
 
 .cta-section h2 {
-  font-size: 2.8rem;
+  font-size: 2.2rem;
   margin-bottom: 20px;
 }
 
-.cta-button.large {
-  padding: 20px 48px;
-  font-size: 1.25rem;
-}
-
-/* Footer */
 .footer {
   background: #052e16;
   color: #a1e0b8;
   text-align: center;
-  padding: 40px 24px;
-  font-size: 0.95rem;
+  padding: 30px 24px;
+  font-size: 0.9rem;
 }

@@ -37,17 +37,17 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              // <ProtectedRoute>
-              <FarmerDashboard />
-              // </ProtectedRoute>
+              <ProtectedRoute>
+                <FarmerDashboard />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/admin"
             element={
-              // <ProtectedRoute adminOnly>
-              <AdminDashboard />
-              // </ProtectedRoute>
+              <ProtectedRoute adminOnly>
+                <AdminDashboard />
+              </ProtectedRoute>
             }
           />
           <Route path="*" element={<Navigate to="/" />} />

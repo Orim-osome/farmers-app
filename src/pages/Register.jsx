@@ -127,22 +127,21 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Phone Number
-                </label>
-                <div className="input-wrapper">
-                  <Phone className="input-icon" size={22} />
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Phone Number"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Phone Number
+              </label>
+              <div className="input-wrapper">
+                <Phone className="input-icon" size={22} />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  onChange={handleChange}
+                  required
+                />
               </div>
+
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
                   Email

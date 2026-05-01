@@ -7,16 +7,16 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      {/* Navbar */}
       <nav className="home-navbar">
         <div className="navbar-container">
           <div className="logo">
             <Leaf className="logo-icon" />
-            <div>
+            <div className="logo-text">
               <h1>CRS-YamFarmers</h1>
               <p>Cross River State</p>
             </div>
           </div>
+
           <div className="nav-links">
             <button
               onClick={() => navigate("/login")}
@@ -34,19 +34,21 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
             <Award className="badge-icon" />
-            <span>Official Yam Farmers Tax System</span>
-            <p>Designed for the hardworking yam farmers of Cross River State</p>
+            <div className="badge-text">
+              <span>Official Yam Farmers Tax System</span>
+              <p>
+                Designed for the hardworking yam farmers of Cross River State
+              </p>
+            </div>
           </div>
 
           <h1 className="hero-title">
             Empowering Yam Farmers
-            <br />
-            <span className="highlight">in Cross River State</span>
+            <span className="highlight"> in Cross River State</span>
           </h1>
 
           <p className="hero-subtitle">
@@ -59,7 +61,7 @@ export default function Home() {
               onClick={() => navigate("/register")}
               className="cta-button primary"
             >
-              Register as Farmer <ArrowRight className="inline ml-2" />
+              Register as Farmer <ArrowRight className="inline-icon" />
             </button>
             <button
               onClick={() => navigate("/login")}
@@ -70,9 +72,15 @@ export default function Home() {
           </div>
 
           <div className="trust-badges">
-            <div className="badge">✅ Government Approved</div>
-            <div className="badge">✅ Secure & Transparent</div>
-            <div className="badge">✅ Auto Tax Calculation</div>
+            <div className="badge">
+              <span>✅</span> Government Approved
+            </div>
+            <div className="badge">
+              <span>✅</span> Secure & Transparent
+            </div>
+            <div className="badge">
+              <span>✅</span> Auto Tax Calculation
+            </div>
           </div>
         </div>
 
