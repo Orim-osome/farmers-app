@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://farm-backend-production-2834.up.railway.app",
+  baseURL: "https://farm-backend-production-2834.up.railway.app",
   timeout: 10000,
 });
 
