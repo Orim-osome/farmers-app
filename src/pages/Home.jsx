@@ -47,12 +47,8 @@ export default function Home() {
           </div>
 
           <h1 className="hero-title">
-            Design and implementation of yam farmers information and tax
-            management
-            <span className="highlight">
-              {" "}
-              system for yam farmers in cross river state
-            </span>
+            Database tax management system for yam farmers
+            <span className="highlight"> in cross river state.</span>
           </h1>
 
           <p className="hero-subtitle">
