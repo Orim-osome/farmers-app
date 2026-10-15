@@ -59,7 +59,8 @@ export default function AdminDashboard() {
   const updateTaxRate = async () => {
     setLoading(true);
     try {
-      await API.put("/admin/tax-rate", { rate: taxRate });
+      // Send taxRatePerTonne instead of rate
+      await API.put("/admin/tax-rate", { taxRatePerTonne: taxRate });
       alert("✅ Tax rate updated successfully!");
       fetchAllData();
     } catch (err) {

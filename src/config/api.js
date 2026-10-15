@@ -1,11 +1,10 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: "farm-backend-production-2834.up.railway.app",
   timeout: 10000,
 });
 
-// Automatically attach JWT token
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

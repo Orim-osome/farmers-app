@@ -25,7 +25,7 @@ html {
 .navbar-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 12px 16px; /* Slightly reduced padding for mobile fit */
+  padding: 12px 16px; 
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -37,7 +37,7 @@ html {
   align-items: center;
   gap: 8px;
   color: white;
-  min-width: 0; /* Allows text to shrink if needed */
+  min-width: 0;
 }
 
 .logo-icon {
@@ -68,7 +68,7 @@ html {
 }
 
 .nav-btn {
-  padding: 8px 16px; /* Optimized padding for mobile */
+  padding: 8px 16px; 
   border-radius: 50px;
   font-weight: 600;
   font-size: 0.85rem;
@@ -148,7 +148,7 @@ html {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 100%; /* Stacks nicely on mobile */
+  width: 100%; 
 }
 
 @media (min-width: 480px) {
@@ -178,7 +178,6 @@ html {
   background: rgba(255,255,255,0.1);
 }
 
-/* Feature and CTA styles remain consistent with your logic */
 .features-section {
   padding: 80px 24px;
   background: #f8fafc;

@@ -47,8 +47,12 @@ export default function Home() {
           </div>
 
           <h1 className="hero-title">
-            Empowering Yam Farmers
-            <span className="highlight"> in Cross River State</span>
+            Design and implementation of yam farmers information and tax
+            management
+            <span className="highlight">
+              {" "}
+              system for yam farmers in cross river state
+            </span>
           </h1>
 
           <p className="hero-subtitle">
@@ -93,7 +97,7 @@ export default function Home() {
       {/* Features Section */}
       <section className="features-section">
         <h2 className="section-title">
-          Why Farmers Love CRS-YamFarmers system
+          Why Farmers Choose the CRS Yam Farmers System
         </h2>
 
         <div className="features-grid">
