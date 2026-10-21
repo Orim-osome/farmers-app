@@ -23,7 +23,6 @@ export default function FarmerDashboard() {
   const [paymentData, setPaymentData] = useState({
     productionId: "",
     amount: "",
-    reference: "",
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,8 +68,12 @@ export default function FarmerDashboard() {
     }
   };
 
-  const openPaymentModal = (productionId) => {
-    setPaymentData({ productionId, amount: "", reference: "" });
+  const openPaymentModal = (production) => {
+    // Automatically set the amount to the fixed taxDue for this production row
+    setPaymentData({
+      productionId: production.id,
+      amount: production.taxDue,
+    });
     setShowPaymentModal(true);
   };
 
@@ -80,10 +83,13 @@ export default function FarmerDashboard() {
 
     setLoading(true);
     try {
+      // Automatically generate a unique payment reference code
+      const autoReference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
       await API.post("/payment", {
         productionId: paymentData.productionId,
         amount: parseFloat(paymentData.amount),
-        reference: paymentData.reference || null,
+        reference: autoReference,
       });
       setMessage("✅ Payment recorded successfully!");
       setShowPaymentModal(false);
@@ -115,6 +121,13 @@ export default function FarmerDashboard() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Feedback Message */}
+        {message && (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 text-emerald-900 font-medium border border-emerald-200">
+            {message}
+          </div>
+        )}
+
         {/* Welcome */}
         <div className="welcome-section mb-10">
           <h2 className="text-4xl font-bold text-emerald-950">
@@ -254,11 +267,11 @@ export default function FarmerDashboard() {
                         </td>
                         <td>
                           <button
-                            onClick={() => openPaymentModal(p.id)}
-                            className="pay-button"
+                            onClick={() => openPaymentModal(p)}
+                            className="pay-button flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition-all"
                           >
                             <CreditCard className="w-4 h-4" />
-                            Pay
+                            Pay ₦{Number(p.taxDue).toLocaleString()}
                           </button>
                         </td>
                       </tr>
@@ -271,64 +284,47 @@ export default function FarmerDashboard() {
         </div>
       </div>
 
-      {/* Beautiful Payment Modal */}
+      {/* Beautiful Fixed Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-              <CreditCard className="text-emerald-600" /> Record Tax Payment
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
+              <CreditCard className="text-emerald-600" /> Confirm Tax Payment
             </h3>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Amount Paid (₦)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={paymentData.amount}
-                  onChange={(e) =>
-                    setPaymentData({ ...paymentData, amount: e.target.value })
-                  }
-                  className="input-field text-lg"
-                  placeholder="Enter amount"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Payment Reference (Optional)
+                  Fixed Tax Amount Due (₦)
                 </label>
                 <input
                   type="text"
-                  value={paymentData.reference}
-                  onChange={(e) =>
-                    setPaymentData({
-                      ...paymentData,
-                      reference: e.target.value,
-                    })
-                  }
-                  className="input-field"
-                  placeholder="Receipt number or bank ref"
+                  value={`₦${Number(paymentData.amount).toLocaleString()}`}
+                  disabled
+                  className="input-field text-xl font-bold bg-gray-100 text-emerald-900 cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  Tax pricing is fixed per season. A secure reference code will
+                  be generated automatically.
+                </p>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 py-4 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50"
+                  className="flex-1 py-4 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl transition-all"
+                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-emerald-600/20"
                 >
-                  {loading ? "Processing..." : "Record Payment"}
+                  {loading
+                    ? "Processing..."
+                    : `Pay ₦${Number(paymentData.amount).toLocaleString()}`}
                 </button>
               </div>
             </form>
