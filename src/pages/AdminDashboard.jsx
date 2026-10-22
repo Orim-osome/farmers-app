@@ -59,12 +59,12 @@ export default function AdminDashboard() {
   const updateTaxRate = async () => {
     setLoading(true);
     try {
-      // Send taxRatePerTonne instead of rate
-      await API.put("/admin/tax-rate", { taxRatePerTonne: taxRate });
-      alert("✅ Tax rate updated successfully!");
+      // Send fixedTaxAmount to match your database schema and backend logic
+      await API.put("/admin/tax-rate", { fixedTaxAmount: taxRate });
+      alert("✅ Tax amount updated successfully!");
       fetchAllData();
     } catch (err) {
-      alert("Failed to update tax rate");
+      alert("Failed to update tax amount");
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col md:flex-row gap-6 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Tax per Tonne (₦)
+                Fixed Tax Amount (₦)
               </label>
               <input
                 type="number"
