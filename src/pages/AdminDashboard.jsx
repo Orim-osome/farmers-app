@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({});
   const [farmers, setFarmers] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [taxRate, setTaxRate] = useState(7500);
+  const [taxRate, setTaxRate] = useState(5000);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,27 +41,31 @@ export default function AdminDashboard() {
 
   const fetchAllData = async () => {
     try {
-      const [reportRes, farmersRes] = await Promise.all([
-        API.get("/admin/reports"),
-        API.get("/admin/farmers"),
-      ]);
+      const [reportRes, farmersRes, paymentsRes, taxRateRes] =
+        await Promise.all([
+          API.get("/admin/reports"),
+          API.get("/admin/farmers"),
+          API.get("/admin/payments"),
+          API.get("/admin/tax-rate"),
+        ]);
+
       setStats(reportRes.data);
       setFarmers(farmersRes.data);
-
-      // Fetch payments
-      const paymentsRes = await API.get("/admin/payments"); // We'll add this endpoint
       setPayments(paymentsRes.data || []);
+
+      if (taxRateRes.data && taxRateRes.data.fixedTaxAmount !== undefined) {
+        setTaxRate(taxRateRes.data.fixedTaxAmount);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching admin data:", err);
     }
   };
 
   const updateTaxRate = async () => {
     setLoading(true);
     try {
-      // Send fixedTaxAmount to match your database schema and backend logic
       await API.put("/admin/tax-rate", { fixedTaxAmount: taxRate });
-      alert("✅ Tax amount updated successfully!");
+      alert("✅ Fixed tax amount updated successfully!");
       fetchAllData();
     } catch (err) {
       alert("Failed to update tax amount");
@@ -73,80 +77,84 @@ export default function AdminDashboard() {
   const outstandingTax = (stats.totalTaxDue || 0) - (stats.totalCollected || 0);
 
   return (
-    <div className="admin-container">
+    <div className="admin-container min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <h2 className="text-4xl font-bold text-emerald-950 mb-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full box-border">
+        <h2 className="text-3xl sm:text-4xl font-bold text-emerald-950 mb-2">
           Admin Reports
         </h2>
-        <p className="text-emerald-700 mb-10">
+        <p className="text-emerald-700 mb-8 text-sm sm:text-base">
           Comprehensive overview and analytics
         </p>
 
         {/* Stats Cards */}
-        <div className="admin-stats mb-12">
-          <div className="stat-card stat-farmers">
-            <div className="stat-icon">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 w-full">
+          <div className="stat-card stat-farmers p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <Users className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">{stats.totalFarmers || 0}</div>
+            <div className="stat-value text-2xl sm:text-3xl">
+              {stats.totalFarmers || 0}
+            </div>
             <div className="stat-label">Total Farmers</div>
           </div>
 
-          <div className="stat-card stat-production">
-            <div className="stat-icon">
+          <div className="stat-card stat-production p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">
+            <div className="stat-value text-2xl sm:text-3xl">
               {stats.totalProduction?.toFixed(1) || 0}
             </div>
             <div className="stat-label">Total Production</div>
           </div>
 
-          <div className="stat-card stat-collected">
-            <div className="stat-icon">
+          <div className="stat-card stat-collected p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <DollarSign className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">
+            <div className="stat-value text-xl sm:text-2xl">
               ₦{(stats.totalCollected || 0).toLocaleString()}
             </div>
             <div className="stat-label">Tax Collected</div>
           </div>
 
-          <div className="stat-card stat-outstanding">
-            <div className="stat-icon">
+          <div className="stat-card stat-outstanding p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <AlertTriangle className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">₦{outstandingTax.toLocaleString()}</div>
+            <div className="stat-value text-xl sm:text-2xl">
+              ₦{outstandingTax.toLocaleString()}
+            </div>
             <div className="stat-label">Outstanding Tax</div>
           </div>
         </div>
 
         {/* Tax Rate Management */}
-        <div className="tax-control glass-card mb-12">
-          <div className="flex items-center gap-4 mb-8">
-            <Settings className="w-8 h-8 text-emerald-600" />
-            <h3 className="text-2xl font-semibold text-emerald-950">
+        <div className="tax-control glass-card p-6 sm:p-8 rounded-3xl mb-10 w-full box-border">
+          <div className="flex items-center gap-4 mb-6">
+            <Settings className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-950">
               Tax Rate Management
             </h3>
           </div>
-          <div className="flex flex-col md:flex-row gap-6 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Fixed Tax Amount (₦)
+          <div className="flex flex-col md:flex-row gap-6 items-stretch md:items-end w-full">
+            <div className="flex-1 w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fixed Tax Amount per Farmer Season (₦)
               </label>
               <input
                 type="number"
                 value={taxRate}
-                onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                className="input-field text-2xl font-semibold"
+                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                className="input-field text-xl sm:text-2xl font-semibold w-full box-border"
               />
             </div>
             <button
               onClick={updateTaxRate}
               disabled={loading}
-              className="btn-primary px-12 py-4"
+              className="btn-primary px-8 sm:px-12 py-4 w-full md:w-auto"
             >
               {loading ? "Updating..." : "Update Tax Rate"}
             </button>
@@ -154,62 +162,65 @@ export default function AdminDashboard() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Bar Chart - Production by LGA */}
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-              <BarChart3 className="text-emerald-600" /> Production by LGA
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-10 w-full">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl w-full box-border">
+            <h3 className="text-lg sm:text-xl font-semibold mb-6 flex items-center gap-3">
+              <BarChart3 className="text-emerald-600" /> Farmers Distribution by
+              LGA
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.byLga || []}>
-                <XAxis dataKey="lga" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="_count.id" fill="#166534" radius={8} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="w-full h-[250px] sm:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.byLga || []}>
+                  <XAxis dataKey="lga" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="_count.id" fill="#166534" radius={8} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          {/* Pie Chart - Tax Overview */}
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
+          <div className="glass-card p-6 sm:p-8 rounded-3xl w-full box-border">
+            <h3 className="text-lg sm:text-xl font-semibold mb-6 flex items-center gap-3">
               <DollarSign className="text-emerald-600" /> Tax Overview
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: "Collected", value: stats.totalCollected || 0 },
-                    { name: "Outstanding", value: outstandingTax },
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  dataKey="value"
-                >
-                  {COLORS.map((color, index) => (
-                    <Cell key={`cell-${index}`} fill={color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="w-full h-[250px] sm:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Collected", value: stats.totalCollected || 0 },
+                      { name: "Outstanding", value: outstandingTax },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    dataKey="value"
+                  >
+                    {COLORS.map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
-        {/* Payments Report Table */}
-        <div className="glass-card rounded-3xl overflow-hidden mb-12">
-          <div className="p-8 border-b bg-emerald-50 flex items-center gap-3">
+        {/* Payments Report Table (Scrollable Table Only) */}
+        <div className="glass-card rounded-3xl overflow-hidden mb-10 w-full box-border">
+          <div className="p-6 sm:p-8 border-b bg-emerald-50 flex items-center gap-3">
             <CreditCard className="w-6 h-6 text-emerald-600" />
-            <h3 className="text-2xl font-semibold text-emerald-950">
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-950">
               Recent Tax Payments
             </h3>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="custom-table w-full">
+          <div className="w-full overflow-x-auto">
+            <table className="custom-table w-full min-w-[600px]">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -248,15 +259,15 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Farmers List */}
-        <div className="glass-card rounded-3xl overflow-hidden">
-          <div className="p-8 border-b bg-emerald-50">
-            <h3 className="text-2xl font-semibold text-emerald-950">
+        {/* Farmers List Table (Scrollable Table Only) */}
+        <div className="glass-card rounded-3xl overflow-hidden w-full box-border">
+          <div className="p-6 sm:p-8 border-b bg-emerald-50">
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-950">
               All Registered Farmers ({farmers.length})
             </h3>
           </div>
-          <div className="farmers-table-container">
-            <table className="custom-table w-full">
+          <div className="w-full overflow-x-auto">
+            <table className="custom-table w-full min-w-[600px]">
               <thead>
                 <tr>
                   <th>FARMER ID</th>

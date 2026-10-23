@@ -69,7 +69,6 @@ export default function FarmerDashboard() {
   };
 
   const openPaymentModal = (production) => {
-    // Automatically set the amount to the fixed taxDue for this production row
     setPaymentData({
       productionId: production.id,
       amount: production.taxDue,
@@ -83,7 +82,6 @@ export default function FarmerDashboard() {
 
     setLoading(true);
     try {
-      // Automatically generate a unique payment reference code
       const autoReference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       await API.post("/payment", {
@@ -117,66 +115,70 @@ export default function FarmerDashboard() {
   const outstanding = totalTaxDue - totalPaid;
 
   return (
-    <div className="farmer-container">
+    <div className="farmer-container min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* Feedback Message */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full box-border">
         {message && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-50 text-emerald-900 font-medium border border-emerald-200">
             {message}
           </div>
         )}
 
-        {/* Welcome */}
-        <div className="welcome-section mb-10">
-          <h2 className="text-4xl font-bold text-emerald-950">
+        <div className="welcome-section mb-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-emerald-950">
             Welcome back, {user?.fullName?.split(" ")[0]} 👋
           </h2>
-          <p className="text-emerald-700 mt-2">
+          <p className="text-emerald-700 mt-1 text-sm sm:text-base">
             Manage your yam production and tax
           </p>
         </div>
 
         {/* Stats */}
-        <div className="farmer-stats mb-12">
-          <div className="stat-card stat-production">
-            <div className="stat-icon">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10 w-full">
+          <div className="stat-card stat-production p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <Leaf className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">{totalProduction.toFixed(1)}</div>
+            <div className="stat-value text-2xl sm:text-3xl">
+              {totalProduction.toFixed(1)}
+            </div>
             <div className="stat-label">Total Yam Production</div>
           </div>
 
-          <div className="stat-card stat-taxdue">
-            <div className="stat-icon">
+          <div className="stat-card stat-taxdue p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <Wallet className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">₦{totalTaxDue.toLocaleString()}</div>
+            <div className="stat-value text-xl sm:text-2xl">
+              ₦{totalTaxDue.toLocaleString()}
+            </div>
             <div className="stat-label">Total Tax Due</div>
           </div>
 
-          <div className="stat-card stat-outstanding">
-            <div className="stat-icon">
+          <div className="stat-card stat-outstanding p-6 rounded-3xl w-full box-border">
+            <div className="stat-icon mb-4">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">₦{outstanding.toLocaleString()}</div>
+            <div className="stat-value text-xl sm:text-2xl">
+              ₦{outstanding.toLocaleString()}
+            </div>
             <div className="stat-label">Outstanding Tax</div>
           </div>
         </div>
 
-        {/* Record Production */}
-        <div className="glass-card p-10 rounded-3xl mb-12">
-          <div className="flex items-center gap-3 mb-8">
-            <Plus className="w-7 h-7 text-emerald-600" />
-            <h3 className="text-2xl font-semibold text-emerald-950">
+        {/* Record Production Form */}
+        <div className="glass-card p-6 sm:p-10 rounded-3xl mb-10 w-full box-border">
+          <div className="flex items-center gap-3 mb-6">
+            <Plus className="w-6 h-6 text-emerald-600" />
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-950">
               Record New Production
             </h3>
           </div>
 
           <form
             onSubmit={handleProductionSubmit}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full"
           >
             <input
               type="number"
@@ -184,14 +186,14 @@ export default function FarmerDashboard() {
               onChange={(e) =>
                 setFormData({ ...formData, year: parseInt(e.target.value) })
               }
-              className="input-field"
+              className="input-field w-full box-border"
             />
             <select
               value={formData.season}
               onChange={(e) =>
                 setFormData({ ...formData, season: e.target.value })
               }
-              className="input-field"
+              className="input-field w-full box-border"
             >
               <option value="Main">Main Season</option>
               <option value="Dry">Dry Season</option>
@@ -205,30 +207,30 @@ export default function FarmerDashboard() {
               }
               placeholder="Tonnes"
               required
-              className="input-field"
+              className="input-field w-full box-border"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary md:col-span-3 py-4 text-lg font-semibold"
+              className="btn-primary md:col-span-3 py-4 text-base sm:text-lg font-semibold w-full"
             >
               {loading ? "Recording..." : "Record Production & Calculate Tax"}
             </button>
           </form>
         </div>
 
-        {/* Production History */}
-        <div className="glass-card rounded-3xl overflow-hidden">
-          <div className="p-8 border-b flex items-center gap-3 bg-emerald-50">
+        {/* Production History (Scrollable Table Only) */}
+        <div className="glass-card rounded-3xl overflow-hidden w-full box-border">
+          <div className="p-6 sm:p-8 border-b flex items-center gap-3 bg-emerald-50">
             <Calendar className="w-6 h-6 text-emerald-600" />
-            <h3 className="text-2xl font-semibold text-emerald-950">
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-950">
               Production & Tax History
             </h3>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="custom-table w-full">
+          <div className="w-full overflow-x-auto">
+            <table className="custom-table w-full min-w-[700px]">
               <thead>
                 <tr>
                   <th>Year</th>
@@ -268,7 +270,7 @@ export default function FarmerDashboard() {
                         <td>
                           <button
                             onClick={() => openPaymentModal(p)}
-                            className="pay-button flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition-all"
+                            className="pay-button flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl transition-all whitespace-nowrap text-sm"
                           >
                             <CreditCard className="w-4 h-4" />
                             Pay ₦{Number(p.taxDue).toLocaleString()}
@@ -284,11 +286,11 @@ export default function FarmerDashboard() {
         </div>
       </div>
 
-      {/* Beautiful Fixed Payment Modal */}
+      {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl box-border">
+            <h3 className="text-xl sm:text-2xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
               <CreditCard className="text-emerald-600" /> Confirm Tax Payment
             </h3>
 
@@ -301,7 +303,7 @@ export default function FarmerDashboard() {
                   type="text"
                   value={`₦${Number(paymentData.amount).toLocaleString()}`}
                   disabled
-                  className="input-field text-xl font-bold bg-gray-100 text-emerald-900 cursor-not-allowed"
+                  className="input-field text-lg sm:text-xl font-bold bg-gray-100 text-emerald-900 cursor-not-allowed w-full box-border"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Tax pricing is fixed per season. A secure reference code will
@@ -313,14 +315,14 @@ export default function FarmerDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 py-4 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50 transition-all"
+                  className="flex-1 py-3 sm:py-4 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50 transition-all text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-emerald-600/20"
+                  className="flex-1 py-3 sm:py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-emerald-600/20 text-sm sm:text-base"
                 >
                   {loading
                     ? "Processing..."
