@@ -2,339 +2,346 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import API from "../config/api";
 import {
-  Users,
+  Leaf,
+  Plus,
+  Wallet,
   TrendingUp,
-  DollarSign,
-  AlertTriangle,
-  Settings,
-  BarChart3,
+  Calendar,
   CreditCard,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-import "../styles/AdminDashboard.css";
+import "../styles/FarmerDashboard.css";
 
-const COLORS = ["#166534", "#4ade80", "#eab308", "#ef4444", "#3b82f6"];
-
-export default function AdminDashboard() {
+export default function FarmerDashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({});
-  const [farmers, setFarmers] = useState([]);
-  const [payments, setPayments] = useState([]);
-  const [taxRate, setTaxRate] = useState(5000);
+  const [productions, setProductions] = useState([]);
+  const [formData, setFormData] = useState({
+    year: new Date().getFullYear(),
+    season: "Main",
+    productionTonnes: "",
+  });
+  const [paymentData, setPaymentData] = useState({
+    productionId: "",
+    amount: "",
+  });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetchAllData();
+    fetchProductions();
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchProductions = async () => {
     try {
-      const [reportRes, farmersRes, paymentsRes, taxRateRes] =
-        await Promise.all([
-          API.get("/admin/reports"),
-          API.get("/admin/farmers"),
-          API.get("/admin/payments"),
-          API.get("/admin/tax-rate"),
-        ]);
-
-      setStats(reportRes.data);
-      setFarmers(farmersRes.data);
-      setPayments(paymentsRes.data || []);
-
-      if (taxRateRes.data && taxRateRes.data.fixedTaxAmount !== undefined) {
-        setTaxRate(taxRateRes.data.fixedTaxAmount);
-      }
+      const res = await API.get("/production");
+      setProductions(res.data);
     } catch (err) {
-      console.error("Error fetching admin data:", err);
+      console.error(err);
     }
   };
 
-  const updateTaxRate = async () => {
+  const handleProductionSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.productionTonnes) return;
+
     setLoading(true);
+    setMessage("");
+
     try {
-      await API.put("/admin/tax-rate", { fixedTaxAmount: taxRate });
-      alert("✅ Fixed tax amount updated successfully!");
-      fetchAllData();
+      await API.post("/production", {
+        year: formData.year,
+        season: formData.season,
+        productionTonnes: parseFloat(formData.productionTonnes),
+      });
+      setMessage("✅ Production recorded successfully!");
+      setFormData({
+        year: new Date().getFullYear(),
+        season: "Main",
+        productionTonnes: "",
+      });
+      fetchProductions();
     } catch (err) {
-      alert("Failed to update tax amount");
+      setMessage("❌ Failed to record production.");
     } finally {
       setLoading(false);
     }
   };
 
-  const outstandingTax = (stats.totalTaxDue || 0) - (stats.totalCollected || 0);
+  const openPaymentModal = (production) => {
+    setPaymentData({
+      productionId: production.id,
+      amount: production.taxDue,
+    });
+    setShowPaymentModal(true);
+  };
 
-  // Dynamic relative percentage scaling based on the highest LGA count so bars stretch high and look prominent
-  const lgaRawData = stats.byLga || [];
-  const maxLgaCount = Math.max(
-    ...lgaRawData.map((item) => item._count?.id || 1),
-    1,
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentData.amount || parseFloat(paymentData.amount) <= 0) return;
+
+    setLoading(true);
+    try {
+      const autoReference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+      await API.post("/payment", {
+        productionId: paymentData.productionId,
+        amount: parseFloat(paymentData.amount),
+        reference: autoReference,
+      });
+      setMessage("✅ Payment recorded successfully!");
+      setShowPaymentModal(false);
+      fetchProductions();
+    } catch (err) {
+      setMessage("❌ Failed to record payment.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalProduction = productions.reduce(
+    (sum, p) => sum + Number(p.productionTonnes || 0),
+    0,
   );
-
-  const lgaChartData = lgaRawData.map((item) => {
-    const count = item._count?.id || 0;
-    // Calculate relative percentage so the highest LGA hits ~100% and stretches tall
-    const relativePercentage = Math.round((count / maxLgaCount) * 100);
-    return {
-      lga: item.lga || "Unknown",
-      displayValue: relativePercentage > 0 ? relativePercentage : 5, // Ensures small bars are still visible
-      actualCount: count,
-    };
-  });
+  const totalTaxDue = productions.reduce(
+    (sum, p) => sum + Number(p.taxDue || 0),
+    0,
+  );
+  const totalPaid = productions.reduce(
+    (sum, p) =>
+      sum + p.payments.reduce((ps, pay) => ps + Number(pay.amount || 0), 0),
+    0,
+  );
+  const outstanding = totalTaxDue - totalPaid;
 
   return (
-    <div className="admin-container">
+    <div className="farmer-container">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full box-border overflow-x-hidden">
-        <h2 className="text-4xl font-bold text-emerald-950 mb-2">
-          Admin Reports
-        </h2>
-        <p className="text-emerald-700 mb-10">
-          Comprehensive overview and analytics
-        </p>
-
-        {/* Stats Cards */}
-        <div className="admin-stats mb-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="stat-card stat-farmers">
-            <div className="stat-icon">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <div className="stat-value">{stats.totalFarmers || 0}</div>
-            <div className="stat-label">Total Farmers</div>
+        {message && (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 text-emerald-900 font-medium border border-emerald-200">
+            {message}
           </div>
+        )}
 
+        <div className="welcome-section mb-8">
+          <h2 className="text-4xl font-bold text-emerald-950">
+            Welcome back, {user?.fullName?.split(" ")[0]} 👋
+          </h2>
+          <p className="text-emerald-700 mt-1">
+            Manage your yam production and tax
+          </p>
+        </div>
+
+        {/* Stats Cards - Restored original grid classes */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
           <div className="stat-card stat-production">
             <div className="stat-icon">
-              <TrendingUp className="w-8 h-8 text-white" />
+              <Leaf className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">
-              {stats.totalProduction?.toFixed(1) || 0}
-            </div>
-            <div className="stat-label">Total Production</div>
+            <div className="stat-value">{totalProduction.toFixed(1)}</div>
+            <div className="stat-label">Total Yam Production</div>
           </div>
 
-          <div className="stat-card stat-collected">
+          <div className="stat-card stat-taxdue">
             <div className="stat-icon">
-              <DollarSign className="w-8 h-8 text-white" />
+              <Wallet className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">
-              ₦{(stats.totalCollected || 0).toLocaleString()}
-            </div>
-            <div className="stat-label">Tax Collected</div>
+            <div className="stat-value">₦{totalTaxDue.toLocaleString()}</div>
+            <div className="stat-label">Total Tax Due</div>
           </div>
 
           <div className="stat-card stat-outstanding">
             <div className="stat-icon">
-              <AlertTriangle className="w-8 h-8 text-white" />
+              <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <div className="stat-value">₦{outstandingTax.toLocaleString()}</div>
+            <div className="stat-value">₦{outstanding.toLocaleString()}</div>
             <div className="stat-label">Outstanding Tax</div>
           </div>
         </div>
 
-        {/* Tax Rate Management */}
-        <div className="tax-control glass-card mb-12 p-8 rounded-3xl">
-          <div className="flex items-center gap-4 mb-8">
-            <Settings className="w-8 h-8 text-emerald-600" />
+        {/* Record Production Form */}
+        <div className="glass-card p-8 rounded-3xl mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Plus className="w-6 h-6 text-emerald-600" />
             <h3 className="text-2xl font-semibold text-emerald-950">
-              Tax Rate Management
+              Record New Production
             </h3>
           </div>
-          <div className="flex flex-col md:flex-row gap-6 items-end">
-            <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Fixed Tax Amount per Farmer Season (₦)
+
+          <form
+            onSubmit={handleProductionSubmit}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Year
               </label>
               <input
                 type="number"
-                value={taxRate}
-                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                className="input-field text-2xl font-semibold w-full"
+                value={formData.year}
+                onChange={(e) =>
+                  setFormData({ ...formData, year: parseInt(e.target.value) })
+                }
+                className="input-field w-full"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Season
+              </label>
+              <select
+                value={formData.season}
+                onChange={(e) =>
+                  setFormData({ ...formData, season: e.target.value })
+                }
+                className="input-field w-full bg-white"
+              >
+                <option value="Main">Main Season</option>
+                <option value="Dry">Dry Season</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Production (Tonnes)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.productionTonnes}
+                onChange={(e) =>
+                  setFormData({ ...formData, productionTonnes: e.target.value })
+                }
+                placeholder="Tonnes"
+                required
+                className="input-field w-full"
+              />
+            </div>
+
             <button
-              onClick={updateTaxRate}
+              type="submit"
               disabled={loading}
-              className="btn-primary px-12 py-4 w-full md:w-auto"
+              className="btn-primary md:col-span-3 py-4 text-lg font-semibold w-full"
             >
-              {loading ? "Updating..." : "Update Tax Rate"}
+              {loading ? "Recording..." : "Record Production & Calculate Tax"}
             </button>
-          </div>
+          </form>
         </div>
 
-        {/* Charts Section with Tall, Dynamic Relative Bar Scaling */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-              <BarChart3 className="text-emerald-600" /> Production Distribution
-              Index (%)
-            </h3>
-            <div className="w-full" style={{ height: "320px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={lgaChartData}>
-                  <XAxis
-                    dataKey="lga"
-                    interval={0}
-                    angle={-15}
-                    textAnchor="end"
-                    height={50}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    tickFormatter={(val) => `${val}%`}
-                  />
-                  <Tooltip
-                    formatter={(value, name, props) => [
-                      `${props.payload.actualCount} farmers`,
-                      "Total Count",
-                    ]}
-                  />
-                  <Bar
-                    dataKey="displayValue"
-                    fill="#166534"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-              <DollarSign className="text-emerald-600" /> Tax Overview
-            </h3>
-            <div className="w-full" style={{ height: "320px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Collected", value: stats.totalCollected || 0 },
-                      { name: "Outstanding", value: outstandingTax },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={120}
-                    dataKey="value"
-                  >
-                    {COLORS.map((color, index) => (
-                      <Cell key={`cell-${index}`} fill={color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Tax Payments Table */}
-        <div className="glass-card rounded-3xl overflow-hidden mb-12">
-          <div className="p-8 border-b bg-emerald-50 flex items-center gap-3">
-            <CreditCard className="w-6 h-6 text-emerald-600" />
+        {/* Production & Tax History (Scrollable Table Container) */}
+        <div className="glass-card rounded-3xl overflow-hidden">
+          <div className="p-8 border-b flex items-center gap-3 bg-emerald-50">
+            <Calendar className="w-6 h-6 text-emerald-600" />
             <h3 className="text-2xl font-semibold text-emerald-950">
-              Recent Tax Payments
+              Production & Tax History
             </h3>
           </div>
 
           <div className="overflow-x-auto w-full">
-            <table className="custom-table w-full min-w-[650px]">
+            <table className="custom-table w-full min-w-[700px]">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Farmer</th>
-                  <th>Production Year</th>
-                  <th>Amount Paid (₦)</th>
-                  <th>Reference</th>
+                  <th>Year</th>
+                  <th>Season</th>
+                  <th>Production (Tonnes)</th>
+                  <th>Tax Due (₦)</th>
+                  <th>Paid (₦)</th>
+                  <th>Outstanding (₦)</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {payments.length === 0 ? (
+                {productions.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-12 text-gray-500">
-                      No payments recorded yet
+                    <td colSpan="7" className="text-center py-12 text-gray-500">
+                      No records yet
                     </td>
                   </tr>
                 ) : (
-                  payments.map((payment, index) => (
-                    <tr key={index}>
-                      <td>
-                        {new Date(payment.paymentDate).toLocaleDateString()}
-                      </td>
-                      <td>{payment.production?.user?.fullName}</td>
-                      <td>{payment.production?.year}</td>
-                      <td className="text-green-600 font-medium">
-                        ₦{Number(payment.amount).toLocaleString()}
-                      </td>
-                      <td className="font-mono text-sm">
-                        {payment.reference || "-"}
-                      </td>
-                    </tr>
-                  ))
+                  productions.map((p) => {
+                    const paid = p.payments.reduce(
+                      (sum, pay) => sum + Number(pay.amount || 0),
+                      0,
+                    );
+                    return (
+                      <tr key={p.id}>
+                        <td className="font-medium">{p.year}</td>
+                        <td>{p.season}</td>
+                        <td className="font-semibold">{p.productionTonnes}</td>
+                        <td>₦{Number(p.taxDue).toLocaleString()}</td>
+                        <td className="text-green-600 font-medium">
+                          ₦{paid.toLocaleString()}
+                        </td>
+                        <td className="text-rose-600 font-medium">
+                          ₦{(p.taxDue - paid).toLocaleString()}
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => openPaymentModal(p)}
+                            className="pay-button flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl transition-all whitespace-nowrap text-sm"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            Pay ₦{Number(p.taxDue).toLocaleString()}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
+      </div>
 
-        {/* Farmers List (Includes Yams Produced Column) */}
-        <div className="glass-card rounded-3xl overflow-hidden">
-          <div className="p-8 border-b bg-emerald-50">
-            <h3 className="text-2xl font-semibold text-emerald-950">
-              All Registered Farmers ({farmers.length})
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
+              <CreditCard className="text-emerald-600" /> Confirm Tax Payment
             </h3>
-          </div>
-          <div className="farmers-table-container overflow-x-auto w-full">
-            <table className="custom-table w-full min-w-[700px]">
-              <thead>
-                <tr>
-                  <th>FARMER ID</th>
-                  <th>FULL NAME</th>
-                  <th>LGA</th>
-                  <th>VILLAGE</th>
-                  <th>PHONE</th>
-                  <th>FARM SIZE</th>
-                  <th>YAMS PRODUCED</th>
-                </tr>
-              </thead>
-              <tbody>
-                {farmers.map((farmer) => (
-                  <tr key={farmer.id}>
-                    <td className="font-mono font-medium">{farmer.farmerId}</td>
-                    <td>{farmer.fullName}</td>
-                    <td>{farmer.lga}</td>
-                    <td>{farmer.village}</td>
-                    <td>{farmer.phone}</td>
-                    <td>
-                      {farmer.farmSizeHa ? farmer.farmSizeHa + " ha" : "—"}
-                    </td>
-                    <td className="font-semibold text-green-700">
-                      {farmer.yamsProduced
-                        ? `${farmer.yamsProduced} tonnes`
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+            <form onSubmit={handlePaymentSubmit} className="space-y-6">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Fixed Tax Amount Due (₦)
+                </label>
+                <input
+                  type="text"
+                  value={`₦${Number(paymentData.amount).toLocaleString()}`}
+                  disabled
+                  className="input-field text-xl font-bold bg-gray-100 text-emerald-900 cursor-not-allowed w-full"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Tax pricing is fixed per season. A secure reference code will
+                  be generated automatically.
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 py-4 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-emerald-600/20"
+                >
+                  {loading
+                    ? "Processing..."
+                    : `Pay ₦${Number(paymentData.amount).toLocaleString()}`}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
