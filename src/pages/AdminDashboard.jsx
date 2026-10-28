@@ -289,6 +289,7 @@ export default function AdminDashboard() {
                   <th>VILLAGE</th>
                   <th>PHONE</th>
                   <th>FARM SIZE</th>
+                  <th>YAMS PRODUCED</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,6 +302,12 @@ export default function AdminDashboard() {
                     <td>{farmer.phone}</td>
                     <td>
                       {farmer.farmSizeHa ? farmer.farmSizeHa + " ha" : "—"}
+                    </td>
+
+                    <td>
+                      {farmer.yamsProduced
+                        ? farmer.yamsProduced + " tonnes"
+                        : "—"}
                     </td>
                   </tr>
                 ))}

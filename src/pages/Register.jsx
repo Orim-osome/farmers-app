@@ -45,6 +45,7 @@ export default function Register() {
     lga: "",
     village: "",
     farmSizeHa: "",
+    yamsProduced: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -81,6 +82,9 @@ export default function Register() {
         ...formData,
         farmSizeHa: formData.farmSizeHa
           ? parseFloat(formData.farmSizeHa)
+          : null,
+        yamsProduced: formData.yamsProduced
+          ? parseFloat(formData.yamsProduced)
           : null,
       });
       alert("✅ Registration successful! Please login.");
@@ -209,6 +213,21 @@ export default function Register() {
                   type="number"
                   name="farmSizeHa"
                   placeholder="Farm Size in Hectares"
+                  step="0.1"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <label className="block text-gray-700 font-medium mb-2">
+                Yams Produced in Tonnes
+              </label>
+              <div className="input-wrapper">
+                <Ruler className="input-icon" size={22} />
+                <input
+                  type="number"
+                  name="yamsProduced"
+                  placeholder="Yams Produced in Tonnes"
                   step="0.1"
                   onChange={handleChange}
                   required
