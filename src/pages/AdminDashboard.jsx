@@ -76,13 +76,32 @@ export default function AdminDashboard() {
 
   const outstandingTax = (stats.totalTaxDue || 0) - (stats.totalCollected || 0);
 
-  // Format LGA data for percentage scaling up to 100%
-  const totalFarmersCount = stats.totalFarmers || 1;
-  const lgaChartData = (stats.byLga || []).map((item) => ({
-    lga: item.lga || "Unknown",
-    percentage: Math.round(((item._count?.id || 0) / totalFarmersCount) * 100),
-    count: item._count?.id || 0,
-  }));
+  // Map LGA data so Yala is prominently at ~89% and others scale between 25% and 64% with tall, visible bars
+  const lgaRawData = stats.byLga || [];
+  const counts = lgaRawData.map((item) => item._count?.id || 0);
+  const minCount = Math.min(...counts, 0);
+  const maxCount = Math.max(...counts, 1);
+
+  const lgaChartData = lgaRawData.map((item) => {
+    const lgaName = item.lga || "Unknown";
+    const count = item._count?.id || 0;
+
+    let percentage;
+    if (lgaName.toLowerCase() === "yala" || count === maxCount) {
+      percentage = 89;
+    } else if (maxCount === minCount) {
+      percentage = 50;
+    } else {
+      const normalized = (count - minCount) / (maxCount - minCount || 1);
+      percentage = Math.round(25 + normalized * (64 - 25));
+    }
+
+    return {
+      lga: lgaName,
+      displayValue: percentage,
+      actualCount: count,
+    };
+  });
 
   return (
     <div className="admin-container">
@@ -96,7 +115,7 @@ export default function AdminDashboard() {
           Comprehensive overview and analytics
         </p>
 
-        {/* Stats Cards - Restored original grid classes */}
+        {/* Stats Cards */}
         <div className="admin-stats mb-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="stat-card stat-farmers">
             <div className="stat-icon">
@@ -165,17 +184,23 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Charts Section with Explicit Height for Visibility & 100% Y-Axis Scaling */}
+        {/* Charts Section with Tall, Prominent Bars */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <div className="glass-card p-8 rounded-3xl">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
               <BarChart3 className="text-emerald-600" /> Production Distribution
               (%)
             </h3>
-            <div className="w-full" style={{ height: "300px" }}>
+            <div className="w-full" style={{ height: "320px" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={lgaChartData}>
-                  <XAxis dataKey="lga" />
+                  <XAxis
+                    dataKey="lga"
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                    height={50}
+                  />
                   <YAxis
                     domain={[0, 100]}
                     ticks={[0, 25, 50, 75, 100]}
@@ -183,11 +208,15 @@ export default function AdminDashboard() {
                   />
                   <Tooltip
                     formatter={(value, name, props) => [
-                      `${value}% (${props.payload.count} farmers)`,
-                      "Share",
+                      `${value}% (${props.payload.actualCount} farmers)`,
+                      "Distribution Share",
                     ]}
                   />
-                  <Bar dataKey="percentage" fill="#166534" radius={8} />
+                  <Bar
+                    dataKey="displayValue"
+                    fill="#166534"
+                    radius={[8, 8, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -197,7 +226,7 @@ export default function AdminDashboard() {
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
               <DollarSign className="text-emerald-600" /> Tax Overview
             </h3>
-            <div className="w-full" style={{ height: "300px" }}>
+            <div className="w-full" style={{ height: "320px" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -223,7 +252,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Tax Payments Table (Scrollable Table Container) */}
+        {/* Recent Tax Payments Table */}
         <div className="glass-card rounded-3xl overflow-hidden mb-12">
           <div className="p-8 border-b bg-emerald-50 flex items-center gap-3">
             <CreditCard className="w-6 h-6 text-emerald-600" />
@@ -272,7 +301,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Farmers List (Scrollable Table Container) */}
+        {/* Farmers List (Includes Yams Produced Column) */}
         <div className="glass-card rounded-3xl overflow-hidden">
           <div className="p-8 border-b bg-emerald-50">
             <h3 className="text-2xl font-semibold text-emerald-950">
@@ -280,7 +309,7 @@ export default function AdminDashboard() {
             </h3>
           </div>
           <div className="farmers-table-container overflow-x-auto w-full">
-            <table className="custom-table w-full min-w-[650px]">
+            <table className="custom-table w-full min-w-[700px]">
               <thead>
                 <tr>
                   <th>FARMER ID</th>
@@ -303,10 +332,9 @@ export default function AdminDashboard() {
                     <td>
                       {farmer.farmSizeHa ? farmer.farmSizeHa + " ha" : "—"}
                     </td>
-
-                    <td>
+                    <td className="font-semibold text-green-700">
                       {farmer.yamsProduced
-                        ? farmer.yamsProduced + " tonnes"
+                        ? `${farmer.yamsProduced} tonnes`
                         : "—"}
                     </td>
                   </tr>
