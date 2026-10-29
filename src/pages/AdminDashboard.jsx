@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({});
   const [farmers, setFarmers] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [taxRate, setTaxRate] = useState(5000);
+  const [taxRate, setTaxRate] = useState(1000);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -65,10 +65,10 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       await API.put("/admin/tax-rate", { fixedTaxAmount: taxRate });
-      alert("✅ Fixed tax amount updated successfully!");
+      alert("✅ Tax rate per tonne updated successfully!");
       fetchAllData();
     } catch (err) {
-      alert("Failed to update tax amount");
+      alert("Failed to update tax rate");
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
             <div className="stat-value">
               {stats.totalProduction?.toFixed(1) || 0}
             </div>
-            <div className="stat-label">Total Production</div>
+            <div className="stat-label">Total Production (Tonnes)</div>
           </div>
 
           <div className="stat-card stat-collected">
@@ -154,18 +154,18 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tax Rate Management */}
+        {/* Tax Rate Configuration (Per Tonne) */}
         <div className="tax-control glass-card mb-12 p-8 rounded-3xl">
           <div className="flex items-center gap-4 mb-8">
             <Settings className="w-8 h-8 text-emerald-600" />
             <h3 className="text-2xl font-semibold text-emerald-950">
-              Tax Rate Management
+              Tax Rate Configuration (Per Tonne)
             </h3>
           </div>
           <div className="flex flex-col md:flex-row gap-6 items-end">
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Fixed Tax Amount per Farmer Season (₦)
+                Tax Rate per Tonne of Yams Produced (₦)
               </label>
               <input
                 type="number"
@@ -173,6 +173,10 @@ export default function AdminDashboard() {
                 onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
                 className="input-field text-2xl font-semibold w-full"
               />
+              <p className="text-xs text-gray-500 mt-2">
+                Each farmer's tax due is calculated automatically as:{" "}
+                <b>Tonnes × This Rate</b>.
+              </p>
             </div>
             <button
               onClick={updateTaxRate}
@@ -181,74 +185,6 @@ export default function AdminDashboard() {
             >
               {loading ? "Updating..." : "Update Tax Rate"}
             </button>
-          </div>
-        </div>
-
-        {/* Charts Section with Tall, Prominent Bars */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-              <BarChart3 className="text-emerald-600" /> Production Distribution
-              (%)
-            </h3>
-            <div className="w-full" style={{ height: "320px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={lgaChartData}>
-                  <XAxis
-                    dataKey="lga"
-                    interval={0}
-                    angle={-15}
-                    textAnchor="end"
-                    height={50}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    tickFormatter={(val) => `${val}%`}
-                  />
-                  <Tooltip
-                    formatter={(value, name, props) => [
-                      `${value}% (${props.payload.actualCount} farmers)`,
-                      "Distribution Share",
-                    ]}
-                  />
-                  <Bar
-                    dataKey="displayValue"
-                    fill="#166534"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="glass-card p-8 rounded-3xl">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3">
-              <DollarSign className="text-emerald-600" /> Tax Overview
-            </h3>
-            <div className="w-full" style={{ height: "320px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Collected", value: stats.totalCollected || 0 },
-                      { name: "Outstanding", value: outstandingTax },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={120}
-                    dataKey="value"
-                  >
-                    {COLORS.map((color, index) => (
-                      <Cell key={`cell-${index}`} fill={color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
           </div>
         </div>
 
@@ -302,7 +238,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Farmers List (Includes Yams Produced Column) */}
-        <div className="glass-card rounded-3xl overflow-hidden">
+        <div className="glass-card rounded-3xl overflow-hidden mb-12">
           <div className="p-8 border-b bg-emerald-50">
             <h3 className="text-2xl font-semibold text-emerald-950">
               All Registered Farmers ({farmers.length})
@@ -341,6 +277,74 @@ export default function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* REVIEW SECTION: Charts placed at the very bottom */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+          <div className="glass-card p-8 rounded-3xl">
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
+              <BarChart3 className="text-emerald-600" /> Production Distribution
+              Review (%)
+            </h3>
+            <div className="w-full" style={{ height: "320px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={lgaChartData}>
+                  <XAxis
+                    dataKey="lga"
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                    height={50}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    ticks={[0, 25, 50, 75, 100]}
+                    tickFormatter={(val) => `${val}%`}
+                  />
+                  <Tooltip
+                    formatter={(value, name, props) => [
+                      `${value}% (${props.payload.actualCount} farmers)`,
+                      "Distribution Share",
+                    ]}
+                  />
+                  <Bar
+                    dataKey="displayValue"
+                    fill="#166534"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="glass-card p-8 rounded-3xl">
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-3 text-emerald-950">
+              <DollarSign className="text-emerald-600" /> Tax Overview Review
+            </h3>
+            <div className="w-full" style={{ height: "320px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Collected", value: stats.totalCollected || 0 },
+                      { name: "Outstanding", value: outstandingTax },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={120}
+                    dataKey="value"
+                  >
+                    {COLORS.map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
